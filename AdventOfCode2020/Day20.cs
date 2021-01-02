@@ -71,15 +71,14 @@ namespace AdventOfCode2020
                     {
                         foreach (var direction2 in Enum.GetValues(typeof(Direction)).Cast<Direction>())
                         {
-
                             if (firstTile.Left.SetEquals(secondTile.Right))
                             {
                                 tilesMatch.Add(new MatchingPair
                                 {
                                     TileId1 = firstTile.Id,
                                     TileId2 = secondTile.Id,
-                                    TileId1Direction = Direction.Left,
-                                    TileId2Direction = Direction.Right
+                                    TileId1InputDirection = Direction.Left,
+                                    TileId2InputDirection = Direction.Right
                                 });
 
                                 if (tilesDictionary.ContainsKey(firstTile.Id))
@@ -106,8 +105,8 @@ namespace AdventOfCode2020
                                 {
                                     TileId1 = firstTile.Id,
                                     TileId2 = secondTile.Id,
-                                    TileId1Direction = Direction.Right,
-                                    TileId2Direction = Direction.Left
+                                    TileId1InputDirection = Direction.Right,
+                                    TileId2InputDirection = Direction.Left
                                 });
                                 if (tilesDictionary.ContainsKey(firstTile.Id))
                                 {
@@ -132,8 +131,8 @@ namespace AdventOfCode2020
                                 {
                                     TileId1 = firstTile.Id,
                                     TileId2 = secondTile.Id,
-                                    TileId1Direction = Direction.Top,
-                                    TileId2Direction = Direction.Bottom
+                                    TileId1InputDirection = Direction.Top,
+                                    TileId2InputDirection = Direction.Bottom
                                 });
                                 if (tilesDictionary.ContainsKey(firstTile.Id))
                                 {
@@ -158,8 +157,8 @@ namespace AdventOfCode2020
                                 {
                                     TileId1 = firstTile.Id,
                                     TileId2 = secondTile.Id,
-                                    TileId1Direction = Direction.Bottom,
-                                    TileId2Direction = Direction.Top
+                                    TileId1InputDirection = Direction.Bottom,
+                                    TileId2InputDirection = Direction.Top
                                 });
 
                                 if (tilesDictionary.ContainsKey(firstTile.Id))
@@ -192,8 +191,10 @@ namespace AdventOfCode2020
         {
             public int TileId1;
             public int TileId2;
-            public Direction TileId1Direction;
-            public Direction TileId2Direction;
+            public Direction TileId1InputDirection;
+            public Direction TileId2InputDirection;
+            public Direction TileId1OutputDirection;
+            public Direction TileId2OutputDirection;
         }
 
         public enum Direction
