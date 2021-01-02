@@ -40,44 +40,43 @@ namespace AdventOfCode2020
             var firstBus = buses.First().id;
             var maxBus = buses.OrderByDescending(b => b.id).First();
             var firstPossible = maxBus.id - maxBus.position;
-            var product = buses.Aggregate(1l, (acc, bus) => acc*(bus.id+bus.position));
-            var matching = new List<long>();
+            var product = buses.Aggregate(1l, (acc, bus) => acc*bus.id);
 
-            for (long i = 0; i < 10000000000; i++)
+            var sum = 0l;
+
+            // Chinese remainder theorem: https://www.dave4math.com/mathematics/chinese-remainder-theorem/
+            foreach (var bus in buses)
             {
-                var m = firstPossible + (maxBus.id * i);
-                if ((m % firstBus == 0))
+                if (bus.position > 0)
                 {
-                    matching.Add(m);
+                    var n = product / bus.id;
+                    var x = getX(n, bus.id, 1);
+                    var s = (bus.id - bus.position) * n * x;
+                    sum += s;
                 }
-            }
-            currentTimestamp = 0;
-            foundTimestamp = 0;
-
-            foreach (var match in matching)
-            {
-                var allBusesMatch = buses.All(bus => ((match + bus.position) % bus.id) == 0);
-                if (allBusesMatch)
-                {
-                    foundTimestamp = match;
-                    break;
-                }
-
+                
             }
 
-            //while (foundTimestamp == 0)
-            //{
-            //    var allBusesMatch = buses.All(bus => ((currentTimestamp+bus.position) % bus.id) == 0);
-            //    if (allBusesMatch)
-            //    {
-            //        foundTimestamp = currentTimestamp;
-            //    }
+            var mod = sum % product;
 
-            //    currentTimestamp += firstBus;
-            //}
+            Console.WriteLine(mod);
+        }
 
+        public long getX(long first, long modNumber, long remainder)
+        {
+            var found = 0;
+            var counter = 1;
+            while (found == 0)
+            {
+                var t = first * counter % modNumber;
+                if (t == remainder)
+                {
+                    found = counter;
+                }
 
-            Console.WriteLine(foundTimestamp);
+                counter++;
+            }
+            return found;
         }
 
         internal struct BusId
