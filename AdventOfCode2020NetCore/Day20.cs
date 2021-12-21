@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -50,19 +51,88 @@ namespace AdventOfCode2020NetCore
 
             // Part 2
             var image = new List<Tile>();
+
+            var allPossibleTiles = tiles.SelectMany(t => GetAllPossibleTileVariations(t));
+
             var topLeftCorner = tiles.First(t => t.Id == corners.First().Key);
+
             topLeftCorner.TilePosition = new Position { x = 0, y = 0};
             var availableTiles = new List<int>(tiles.Select(t => t.Id));
             availableTiles.Remove(topLeftCorner.Id);
+
+            
+
+            var neighDirections = new HashSet<Direction>(matchingPairs.Where(r => r.TileId1 == topLeftCorner.Id).Select(t => t.TileId1InputDirection)
+                              .Concat(matchingPairs.Where(r => r.TileId2 == topLeftCorner.Id).Select(t => t.TileId2InputDirection)));
+
+
+            //if (neighDirections.SetEquals(new HashSet<Direction> { Direction.Top, Direction.Right }))
+            //{
+            //    var tempRight = topLeftCorner.Right;
+            //    topLeftCorner.Right = new HashSet<int>(topLeftCorner.Top);
+            //    topLeftCorner.Bottom = new HashSet<int>(topLeftCorner.RotatedRight);
+            //    topLeftCorner.Left = new HashSet<int>();
+            //    topLeftCorner.Top = new HashSet<int>();
+            //}
+            //else if (neighDirections.SetEquals(new HashSet<Direction> { Direction.Top, Direction.Left }))
+            //{
+            //}
+            //else if (neighDirections.SetEquals(new HashSet<Direction> { Direction.Left, Direction.Bottom }))
+            //{
+            //}
+
             image.Add(topLeftCorner);
 
             var currentTile = topLeftCorner;
+            var expectedNoNeighbors = 4;
 
             for (var x = 0; x < lengthOfImage; x++)
             {
+                if (x > 0)
+                {
+                    currentTile = image.First(t => t.TilePosition.x == x - 1 && t.TilePosition.y == 0);
+                }
                 for (var y = 0; y < lengthOfImage; y++)
                 {
+                    if (x == 0 && y == 0)
+                    {
+                        continue;
+                    }
+                    else if (x == 0 || x == lengthOfImage - 1)
+                    {
+                        expectedNoNeighbors = 3;
+
+                        if (y == lengthOfImage - 1 || y == 0)
+                        {
+                            expectedNoNeighbors = 2;
+                        }
+                        
+                    }
+                    else
+                    {
+                        expectedNoNeighbors = 4;
+                        if (y == lengthOfImage - 1 || y == 0)
+                        {
+                            expectedNoNeighbors = 3;
+                        }
+                    }
+
+                    var neigh = matchingPairs.Where(r => r.TileId1 == currentTile.Id)
+                              .Concat(matchingPairs.Where(r => r.TileId2 == currentTile.Id));
+
+                    var neighbours = matchingPairs.Where(r => r.TileId1 == currentTile.Id).Select(t => t.TileId2)
+                              .Concat(matchingPairs.Where(r => r.TileId2 == currentTile.Id).Select(t => t.TileId1))
+                              .Distinct()
+                              .Where(t => availableTiles.Contains(t)).ToList();
+                    var possibleNeighbors = matchingDict.Where(k => neighbours.Contains(k.Key) && k.Value.Count == (expectedNoNeighbors * 2));
+                    var next = tiles.First(t => t.Id == possibleNeighbors.First().Key);
+                    next.TilePosition = new Position { x = x, y = y };
+                    availableTiles.Remove(next.Id);
+                    image.Add(next);
+                    currentTile = next;
+
                 }
+
             }
             
             Console.WriteLine("42");
@@ -98,6 +168,8 @@ namespace AdventOfCode2020NetCore
 
                 }
             }
+
+            tilesMatch = tilesMatch.GroupBy(t => new { t.TileId1, t.TileId2}).Select(t => t.First()).ToList();
 
             return (tilesMatch, tilesDictionary);
         }
@@ -137,8 +209,6 @@ namespace AdventOfCode2020NetCore
             public int TileId2;
             public Direction TileId1InputDirection;
             public Direction TileId2InputDirection;
-            public Direction TileId1OutputDirection;
-            public Direction TileId2OutputDirection;
         }
 
         public enum Direction
@@ -178,11 +248,38 @@ namespace AdventOfCode2020NetCore
             }
         }
 
+        private List<Tile> GetAllPossibleTileVariations(Tile tile)
+        {
+            var tiles = new List<Tile>();
+            tiles.Add(tile);
+            var rotatedRight = tile.RotateRight();
+            tiles.Add(rotatedRight);
+            var rotatedRightTwice = rotatedRight.RotateRight();
+            tiles.Add(rotatedRightTwice);
+            var rotatedRightThrice = rotatedRightTwice.RotateRight();
+            tiles.Add(rotatedRightThrice);
+
+            var rotatedLeft = tile.RotateLeft();
+            tiles.Add(rotatedLeft);
+            var rotatedLefttwice = rotatedLeft.RotateLeft();
+            tiles.Add(rotatedLefttwice);
+            var rotatedLeftThrice = rotatedLefttwice.RotateLeft();
+            tiles.Add(rotatedLeftThrice);
+
+            var flippedUpsideDown = tile.FlipUpsideDown();
+            tiles.Add(flippedUpsideDown);
+            var flippedLeftToRight = tile.FlipLeftToRight();
+            tiles.Add(flippedLeftToRight);
+
+            return tiles;
+        }
+
         internal class Tile
         {
             public int Id;
             public Position TilePosition;
             public List<Position> Positions;
+            public int MaxLength;
             public HashSet<int> Left;
             public HashSet<int> Right;
             public HashSet<int> Top;
@@ -197,6 +294,7 @@ namespace AdventOfCode2020NetCore
                 Id = id;
                 TilePosition = tilePosition;
                 Positions = positions;
+                MaxLength = maxLength;
                 Left = new HashSet<int>(Positions.Where(p => p.y == 0).Select(r => r.x));
                 RotatedLeft = new HashSet<int>(Left.Select(m => maxLength - m));
                 Right = new HashSet<int>(Positions.Where(p => p.y == maxLength).Select(r => r.x));
@@ -206,8 +304,48 @@ namespace AdventOfCode2020NetCore
                 Bottom = new HashSet<int>(Positions.Where(p => p.x == maxLength).Select(r => r.y));
                 RotatedBottom = new HashSet<int>(Bottom.Select(m => maxLength - m));
             }
+
+            public Tile RotateRight()
+            {
+                return new Tile(Id, TilePosition, Positions.Select(p => new Position {x = p.y,  y = MaxLength - p.x}).ToList(), MaxLength);
+            }
+
+            public Tile RotateLeft()
+            {
+                return new Tile(Id, TilePosition, Positions.Select(p => new Position {x = MaxLength - p.y, y = p.x}).ToList(), MaxLength);
+            }
+
+            public Tile FlipLeftToRight()
+            {
+                return new Tile(Id, TilePosition, Positions.Select(p => new Position { x = p.x, y = MaxLength - p.y }).ToList(), MaxLength);
+            }
+
+            public Tile FlipUpsideDown()
+            {
+                return new Tile(Id, TilePosition, Positions.Select(p => new Position { x = MaxLength - p.x, y = p.y }).ToList(), MaxLength);
+            }
+
+            public void Print()
+            {
+                for (int x = 0; x <= MaxLength; x++)
+                {
+                    for(int y = 0; y <= MaxLength; y++)
+                    {
+                        if (Positions.Contains(new Position { x = x, y = y}))
+                        {
+                            Console.Write('#');
+                        }
+                        else
+                        {
+                            Console.Write('.');
+                        }
+                    }
+                    Console.WriteLine();
+                }
+            }
         }
 
+        [DebuggerDisplay("x = {x}, y = {y}")]
         internal struct Position
         {
             public int x;
