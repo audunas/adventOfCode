@@ -69,7 +69,7 @@ namespace AdventOfCode2021
                 //Console.WriteLine(string.Join("", row.Select(p => p == 1 ? '#' : '.')));
             }
             lines.Add("");
-            File.AppendAllLines("../../../input/day20output.txt", lines);
+            //File.AppendAllLines("../../../input/day20output.txt", lines);
             //Console.WriteLine();
         }
 
