@@ -57,9 +57,9 @@ namespace AdventOfCode2022
                 else if (newPos < 0)
                 {
                     var cycle = (int)Math.Ceiling((decimal)Math.Abs(newPos) / length);
-                    newPos = newPos + (cycle * length) - 1;
+                    newPos = newPos + (cycle * length) - (cycle > 1 ? 0 : 1);
                 }
-                else if (newPos == 0)
+                else if (newPos % length == 0)
                 {
                     newPos = length - 1;
                 }
