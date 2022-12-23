@@ -6,7 +6,7 @@ namespace AdventOfCode2022
     {
         static void Main(string[] args)
         {
-            new Day21();
+            new Day20();
 
             Console.WriteLine("DONE!");
 
