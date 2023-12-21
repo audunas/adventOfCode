@@ -2,7 +2,7 @@
 using AdventOfCode2023;
 
 Console.WriteLine("Start...");
-new Day12();
+new Day18();
 Console.WriteLine("Done!");
 
 Console.ReadLine();
